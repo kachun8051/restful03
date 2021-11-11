@@ -1,0 +1,241 @@
+<!doctype html>
+<html>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+	<link href="dropdown.css" rel="stylesheet">
+	
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+<script>
+var request = new XMLHttpRequest();
+//make html and resultArray as global variables
+var html;
+var resultArray;
+
+function startSearch() {
+	var campusId = document.getElementById("campusId2").value;
+		
+	var url 
+		= "http://localhost/rest/index.php/vaccine/campusBooking/" + campusId;
+		
+	request.open("GET", url, true);
+	
+	request.onreadystatechange = updatePage;  // callback
+	
+	request.send(null);
+}
+
+function updatePage() {
+	if (request.readyState==4) {
+		if (request.status==200) {
+			var serverData = request.responseText;
+			var area = 
+				document.getElementById("displayArea");
+			//area.innerHTML = serverData;	
+
+			resultArray = JSON.parse(serverData);
+			//html = "<ul>"
+			html = "<table class='table table-hover'>";
+			html += "<tr><th>BookingId</th>";
+			html += "<th>Staff / Student Id</th>";
+			html += "<th>Staff / Student Name</th>";
+			html += "<th>CampusId</th>";
+			html += "<th>Schedule Date</th></tr>";			
+			resultArray.forEach(showRecord2);
+/*
+			html += "<li>" + resultArray[0]["staffStudentId"];
+			html += "<li>" + resultArray[0]["staffStudentName"];
+			html += "<li>" + resultArray[0]["campusId"];
+			html += "<li>" + resultArray[0]["scheduleDate"];
+*/			
+			html += "</ul>"
+			area.innerHTML = html;
+		}
+	}	
+}
+
+function showRecord(record){
+	html += "<li>" + record["staffStudentId"] + "</li>";
+	html += "<li>" + record["staffStudentName"] + "</li>";
+	html += "<li>" + record["campusId"] + "</li>";
+	html += "<li>" + record["scheduleDate"] + "</li>";
+	//alert(result["staffStudentId"]);
+	//Console.log("Hello");
+}
+
+function showRecord2(record) {
+	html += "<tr>";
+	html += "<td>" + record["bookingId"] + "</td>";
+	html += "<td>" + record["staffStudentId"] + "</td>";
+	html += "<td>" + record["staffStudentName"] + "</td>";
+	html += "<td>" + record["campusId"] + "</td>";
+	html += "<td>" + record["scheduleDate"] + "</td>";
+	html += "<td><img src='bin.png' width=30 ";
+	html += 'data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" ';
+	html += "onclick='tryDelete(";
+	html += record["bookingId"];
+	html += ")' /></td>";	
+	html += "</tr>";
+}
+
+function tryDelete(bookingId){
+	//alert(bookingId);	
+	for (item of resultArray) {
+		if (item['bookingId']==bookingId) {
+			staffStudentId = item['staffStudentId'];
+			staffStudentName = item['staffStudentName'];	
+			campusId = item['campusId'];
+			scheduleDate = item['scheduleDate'];
+			timeSlotId = item['timeSlotId'];	
+			bookingDateTime = item['bookingDateTime'];	
+			//document.getElementById("modalBookingId").value = bookingId;
+			break;
+		}
+	}	
+	document.getElementById("modalBookingId").value = bookingId;
+	document.getElementById("modalStaffStudentId").value = staffStudentId;
+	document.getElementById("modalStaffStudentName").value = staffStudentName;
+	document.getElementById("modalCampusId").value = campusId;
+	document.getElementById("modalScheduleDate").value = scheduleDate;
+	document.getElementById("modalTimeSlotId").value = timeSlotId;
+	document.getElementById("modalBookingDateTime").value = bookingDateTime;
+}
+
+function setCampus(campusId){
+	//alert(campusId);
+	var elem = document.getElementById("campusId2");
+	elem.value = campusId;
+}
+
+function goDelete() {
+	var campusId = document.getElementById("modalBookingId").value;
+		
+	var url 
+		= "http://localhost/rest/index.php/vaccine/booking/" + campusId;
+		
+	request.open("DELETE", url, true);
+	
+	request.onreadystatechange = showDeleteResult;  // callback
+	
+	request.send(null);
+}
+
+function showDeleteResult(){
+	if (request.readyState==4) {
+		if (request.status==200) {
+			//alert(request.responseText);
+			document.getElementById("btnModalCancel").click();
+			// start over
+			startSearch();
+		}
+	}
+}
+
+</script>
+
+<body>
+
+By ID: <input type=text id="campusId">
+<button type="button" class="btn btn-primary" onclick="startSearch()">Search</button>
+
+<div id="displayArea"></div>
+
+<!-- pane for dropdown of campus -->
+<div class="d-flex gap-5 justify-content-center" id="dropdownFilter">
+	<div class="dropdown-menu pt-0 mx-0 rounded-3 shadow overflow-hidden" style="width: 280px;">
+	
+		  <form class="p-2 mb-2 bg-light border-bottom">
+			  <div class="input-group mb-3">
+			  <input type="text" class="form-control" placeholder="Select a campus..." aria-describedby="basic-addon2" id="campusId2">
+			  <button type="button" class="btn btn-outline-secondary" 
+			  onclick="startSearch()">Search</button>
+			  </div>
+		  </form>
+		  
+  
+	  <ul class="list-unstyled mb-0">
+		<li>
+		  <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+		  href="javascript:setCampus('TY')">
+		  <span class="d-inline-block bg-success rounded-circle" style="width: .5em; height: .5em;">
+		  </span>
+		  Tsing Yi
+		  </a>
+		</li>
+		
+		<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+		href="javascript:setCampus('MH')">
+		  <span class="d-inline-block bg-primary rounded-circle" style="width: .5em; height: .5em;"></span>
+		  Morrison-Hill
+		</a>
+		</li>
+		<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:setCampus('LWL')">
+		  <span class="d-inline-block bg-danger rounded-circle" style="width: .5em; height: .5em;"></span>
+		  Lee Wai Lee
+		</a>
+		</li>
+		<li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:setCampus('ST')">
+		  <span class="d-inline-block bg-info rounded-circle" style="width: .5em; height: .5em;"></span>
+		  Shatin
+		</a>
+		</li>
+	  </ul>
+  
+	</div>	
+  
+  </div>
+
+  <!-- Modal for confirmation of deletion -->
+<div class="modal fade" id="confirmDeleteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmDeleteModalLabel">Modal title</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		<div class="input-group mb-3">
+		  <span class="input-group-text" id="basic-addon1">Booking ID</span>
+		  <input type="text" class="form-control" aria-describedby="basic-addon1" 
+		  id="modalBookingId" readonly>
+		</div>
+		
+		<div class="input-group mb-3">
+		  <span class="input-group-text" id="basic-addon1">Staff/Student ID</span>
+		  <input type="text" class="form-control" aria-describedby="basic-addon1" id="modalStaffStudentId" readonly>
+		</div>
+		
+		<div class="input-group mb-3">
+		  <span class="input-group-text" id="basic-addon1">Name</span>
+		  <input type="text" class="form-control" aria-describedby="basic-addon1" id="modalStaffStudentName" readonly>
+		  
+		</div>	
+		<div class="input-group mb-3">
+		  <span class="input-group-text" id="basic-addon1">Campus</span>
+		  <input type="text" class="form-control" aria-describedby="basic-addon1" 
+		  id="modalCampusId" readonly>
+		</div>	
+		<div class="input-group mb-3">
+		  <span class="input-group-text" id="basic-addon1">Date</span>
+		  <input type="text" class="form-control" aria-describedby="basic-addon1" id="modalScheduleDate" readonly>
+		</div>			
+		<div class="input-group mb-3">
+		  <span class="input-group-text" id="basic-addon1">Time Slot</span>
+		  <input type="text" class="form-control" aria-describedby="basic-addon1" id="modalTimeSlotId" readonly>
+		</div>	
+		<div class="input-group mb-3">
+		  <span class="input-group-text" id="basic-addon1">Booking Date/Time</span>
+		  <input type="text" class="form-control" aria-describedby="basic-addon1" id="modalBookingDateTime" readonly>
+		</div>			
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnModalCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="goDelete()">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+
+</html>
