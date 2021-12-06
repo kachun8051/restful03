@@ -93,6 +93,24 @@ class VaccineService {
 	}
 	
 	function restDelete($params) {
+		$type = array_shift($params);
+		if ($type==='booking') {
+			$bookingId = array_shift($params);
+			
+			require_once 'db.php';
+			$sql = "DELETE FROM booking where bookingId='$bookingId'";
+			if ($dbresult=$conn->query($sql)) {
+				echo "booking deleted";
+				exit;
+			} else {
+				$arr = array();
+				$arr["status"] = "error";
+				$arr["errcode"] = "103";
+				$arr["errmsg"] = "SQL failed to delete booking record";
+				echo json_encode($arr);
+				exit;
+			}			
+		}
 	}
 }
 
